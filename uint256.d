@@ -87,6 +87,11 @@ public:
     while (--pn[i] == -1 && i < WIDTH-1)
       i++;
   }
+  
+  alias opEquals = Object.opEquals;
+  override bool opEquals(Object obj) const{
+    return this.pn == (cast(Uint256)obj).pn;
+  }
 }
 
 
