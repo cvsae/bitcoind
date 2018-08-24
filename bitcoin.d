@@ -284,6 +284,17 @@ public:
   bool IsCoinBase() const{
     return (vin.length == 1 && vin[0].prevout.IsNull());
   }
+  
+  int64_t GetValueOut() const{
+    int64_t nValueOut = 0;
+    foreach(const CTxOut txout; vout){
+      if (txout.nValue < 0){
+        throw new Exception("CTransaction::GetValueOut() : negative value");
+      }
+      nValueOut += txout.nValue;
+    }
+      return nValueOut;
+  } 
 
   bool CheckTransaction() const{
     // Basic checks that don't depend on any context
