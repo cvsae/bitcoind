@@ -421,7 +421,7 @@ public:
     return toLower(to!string(toHexString(sha256.digest(sha256.digest(Serialize.decodeHex))).chunks(2).array.retro.joiner));
   }
 
-  string BuildMerkleTree(){
+  string BuildMerkleTree() const{
     string[] txhashes;
 
     foreach(const CTransaction tx; vtx){
