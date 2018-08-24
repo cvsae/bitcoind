@@ -15,8 +15,12 @@ import std.bigint;
 import std.bitmanip;
 import std.uni;
 import core.stdc.stdint;
+import core.stdc.time;
+
 
 const uint64_t COIN = 100000000;
+static int64_t nTimeOffset = 0;
+
 
 
 string CompactSize(int x){
@@ -35,6 +39,15 @@ string encodeHex(string i){
 // decode hex 
 string decodeHex(string i){
   return to!string(i.chunks(2).map!(digits => cast(char) digits.to!ubyte(16)).array);
+}
+
+// unixtimestamp
+int64_t GetTime(){
+    return core.stdc.time.time(null);
+}
+
+int64_t GetAdjustedTime(){
+    return GetTime() + nTimeOffset;
 }
 
 
@@ -429,4 +442,59 @@ public:
 
     return "";
   }
+  bool CheckBlock() const{
+    // These are checks that are independent of context
+    // that can be verified before saving an orphan block.
+
+    // Size limits
+    if (vtx.length == 0 || vtx.length > 100000000){
+      throw new Exception("CheckBlock() : size limits failed");
+    }
+    
+    // Check timestamp
+    if (nTime > GetAdjustedTime() + 2 * 60 * 60){
+      throw new Exception("CheckBlock() : block timestamp too far in the future");
+    }
+
+    // First transaction must be coinbase, the rest must not be
+    if (vtx.length == 0 || !vtx[0].IsCoinBase()){
+      throw new Exception("CheckBlock() : first tx is not coinbase");
+    }
+
+    for (int i = 1; i < vtx.length; i++){
+      if (vtx[i].IsCoinBase()){
+        throw new Exception("CheckBlock() : more than one coinbase");
+      }
+    }
+
+    // Check transactions
+    foreach(const CTransaction tx; vtx){
+      if (!tx.CheckTransaction()){
+        throw new Exception("CheckBlock() : CheckTransaction failed");
+      }
+    }       
+
+    // Check merkleroot 
+    if (hashMerkleRoot != BuildMerkleTree()){
+      throw new Exception("CheckBlock() : hashMerkleRoot mismatch");
+    }
+
+    return true;
+  }
+}
+
+bool ProcessBlock(CBlock pblock){
+  string hash = pblock.GetHash();
+  // Check for duplicate
+  // stable 
+  // orphan 
+
+  // Preliminary checks
+  if (!pblock.CheckBlock()){
+    throw new Exception("ProcessBlock() : CheckBlock FAILED");
+  }
+
+  writeln("ProcessBlock: ACCEPTED\n");
+
+  return true;
 }
