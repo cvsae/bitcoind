@@ -74,6 +74,10 @@ public:
     hash = "0"; 
     n = -1; 
   }
+  
+  bool opEquals(const COutPoint a, const COutPoint b) const{
+    return a.hash == b.hash && a.n == b.n;
+  }
 
 
   string ToString() const{
@@ -127,6 +131,12 @@ public:
 
 
     return toLower((cast(ubyte[]) header).toHexString);
+  }
+  
+  bool opEquals(const CTxIn a, const CTxIn b) const{
+    return (a.prevout   == b.prevout &&
+            a.scriptSig == b.scriptSig &&
+            a.nSequence == b.nSequence);
   }
 
 
