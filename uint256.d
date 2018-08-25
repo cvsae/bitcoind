@@ -101,7 +101,7 @@ public:
 // uint256
 //
 
-class uint256: base_uint{
+class Uint256: base_uint{
 public:
   alias base_uint basetype;
 
@@ -134,13 +134,18 @@ public:
 void main(){
 
 
-  uint256 a = new uint256(7);
+  Uint256 a = new Uint256(7);
   writeln(a.ToString());
   a--;
   writeln(a.ToString());
   a++;
   writeln(a.ToString());
 
+  Uint256 test1 = new Uint256(0);
+  Uint256 test2 = new Uint256(0);
+  writeln(test1 == test2);
+  test1++;
+  writeln(test1 == test2);
 }
 
 */
