@@ -51,37 +51,164 @@ int64_t GetAdjustedTime(){
 }
 
 
+// START BASEUINT
+
+
+// We have to keep a separate base class without constructors
+// so the compiler will let us use it in a union
+class base_uint{
+protected:
+  enum { WIDTH=256/32 };
+  int[WIDTH] pn;
+public:
+
+  string GetHex() const{
+    char[pn.sizeof * 2 + 1] psz;
+    for (int i = 0; i < pn.sizeof; i++){
+      psz[i] = (cast(char*)pn)[pn.sizeof - i - 1];
+    }
+    return toLower(to!string(psz[0..32]).encodeHex());
+  }
+
+
+  void SetHex(const string str){
+    for (int i = 0; i < WIDTH; i++)
+      pn[i] = 0;
+
+    char* psz = str.dup.ptr;
+
+
+    // skip 0x
+
+    if (psz[0] == '0' && toLower(psz[1]) == 'x')
+      psz += 2;
+
+    // hex string to uint
+    static char[256] phexdigit = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,1,2,3,4,5,6,7,8,9,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0xa,0xb,0xc,0xd,0xe,0xf,0,0,0,0,0,0,0,0,0];
+    const char* pbegin = psz;
+    while (phexdigit[*psz] || *psz == '0')
+      psz++;
+    psz--;
+    char* p1 = cast(char*)pn;
+    char* pend = p1 + WIDTH * 4;
+    while (psz >= pbegin && p1 < pend){
+      *p1 = phexdigit[cast(char)*psz--];
+      if (psz >= pbegin){
+        *p1 |= (phexdigit[cast(char)*psz--] << 4);
+        p1++;
+      }
+    }
+  }
+
+  string ToString() const{
+    return (GetHex());
+  }
+
+
+
+  void opUnary(string op : "++")(){
+    int i = 0;
+    while (++pn[i] == 0 && i < WIDTH-1)
+      i++;
+  }
+
+  void opUnary(string op : "--")(){
+    int i = 0;
+    while (--pn[i] == -1 && i < WIDTH-1)
+      i++;
+  }
+
+  alias opEquals = Object.opEquals;
+  override bool opEquals(Object obj) const{
+    return this.pn == (cast(Uint256)obj).pn;
+  }
+
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// uint256
+//
+
+class Uint256: base_uint{
+public:
+  alias base_uint basetype;
+
+  this(){
+
+  }
+
+
+
+  this(const basetype b){
+    for (int i = 0; i < WIDTH; i++){
+      pn[i] = b.pn[i];
+    }
+  }
+
+
+  this(uint64_t b){
+    pn[0] = cast(int)b;
+    pn[1] = cast(int)(b >> 32);
+    for (int i = 2; i < WIDTH; i++){
+      pn[i] = 0;
+    }
+  }
+
+  void opAssign(uint64_t b) {
+    pn[0] = cast(int)b;
+    pn[1] = cast(int)(b >> 32);
+    for (int i = 2; i < WIDTH; i++){
+      pn[i] = 0;
+    }
+  }
+
+
+  this(string str){
+    SetHex(str);
+  }
+}
+
+// END UINT256
+
+
 
 class COutPoint{
 public:
-  string hash;
+  Uint256 hash = new Uint256();
   int n;
 
   this(){
     SetNull();
   }
 
-  this(string hashIn, uint nIn) { 
+  this(Uint256 hashIn, uint nIn) { 
     hash = hashIn; 
     n = nIn; 
   }
 
   bool IsNull() const { 
-    return (hash == "000000000000000000000000000000000000000000000000000000000000000" && n == -1); 
+    return (hash == new Uint256(0)  && n == -1); 
   }
 
   void SetNull(){ 
-    hash = "0"; 
+    hash = 0; 
     n = -1; 
   }
-  
+
   bool opEquals(const COutPoint a, const COutPoint b) const{
     return a.hash == b.hash && a.n == b.n;
   }
 
+  
+
+
 
   string ToString() const{
-    return format("COutPoint(%s, %d)", hash, n);
+    writeln(hash == hash);
+    return format("COutPoint(%s, %d)", hash.ToString(), n);
   }
 
   void print() const{
@@ -105,7 +232,7 @@ public:
     nSequence = uint.max;
   }
 
-  this(string hashPrevTx, string scriptSigIn, uint nOut, uint nSequenceIn=uint.max){
+  this(Uint256 hashPrevTx, string scriptSigIn, uint nOut, uint nSequenceIn=uint.max){
     prevout = new COutPoint(hashPrevTx, nOut);
     scriptSig = scriptSigIn;
     nSequence = nSequenceIn;
@@ -123,7 +250,7 @@ public:
 
   string Serialize() const{
     byte[] header;
-    header ~= prevout.hash.decodeHex();
+    header ~= prevout.hash.ToString().decodeHex();
     header ~= "FFFFFFFF".decodeHex;
     header ~= CompactSize(cast(int)(scriptSig.length));
     header ~= scriptSig;
@@ -132,7 +259,7 @@ public:
 
     return toLower((cast(ubyte[]) header).toHexString);
   }
-  
+
   bool opEquals(const CTxIn a, const CTxIn b) const{
     return (a.prevout   == b.prevout &&
             a.scriptSig == b.scriptSig &&
@@ -143,6 +270,7 @@ public:
 
 
   string ToString() const{
+    writeln(prevout == prevout);
     string str;
     str ~= ("CTxIn(");
     str ~= prevout.ToString();
@@ -192,6 +320,11 @@ public:
 
   bool IsNull(){
     return (nValue == -1);
+  }
+
+
+  bool opEquals(const CTxOut a, const CTxOut b) const{
+    return (a.nValue == b.nValue && a.scriptPubKey == b.scriptPubKey);
   }
 
   string ToString() const{
@@ -249,13 +382,6 @@ public:
 
     return true;
   }
-  
-  bool opEquals(const CTransaction a, const CTransaction b) const{
-    return (a.nVersion  == b.nVersion &&
-            a.vin       == b.vin &&
-            a.vout      == b.vout &&
-            a.nLockTime == b.nLockTime);
-  }
 
 
   string Serialize() const{
@@ -292,9 +418,16 @@ public:
     return toLower((cast(ubyte[]) header).toHexString);
   }
 
-  string GetHash() const{
+  bool opEquals(const CTransaction a, const CTransaction b) const{
+    return (a.nVersion  == b.nVersion &&
+            a.vin       == b.vin &&
+            a.vout      == b.vout &&
+            a.nLockTime == b.nLockTime);
+  }
+
+  Uint256 GetHash() const{
     auto sha256 = new SHA256Digest();
-    return toLower(to!string(toHexString(sha256.digest(sha256.digest(Serialize.decodeHex))).chunks(2).array.retro.joiner));
+    return new Uint256(toLower(to!string(toHexString(sha256.digest(sha256.digest(Serialize.decodeHex))).chunks(2).array.retro.joiner)));
 
   }
 
@@ -340,7 +473,7 @@ public:
 
    string ToString() const{
     string str;
-    str ~= format("CTransaction(hash=%s, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n", GetHash(), nVersion, vin.length, vout.length, nLockTime);
+    str ~= format("CTransaction(hash=%s, ver=%d, vin.size=%d, vout.size=%d, nLockTime=%d)\n", GetHash().ToString(), nVersion, vin.length, vout.length, nLockTime);
     for (int i = 0; i < vin.length; i++)
       str ~= format(" %s \n", vin[i].ToString());
     for (int i = 0; i < vout.length; i++)
@@ -370,8 +503,8 @@ class CBlock{
 public:
   // block header 
   uint32_t nVersion;
-  string hashPrevBlock;
-  string hashMerkleRoot;
+  Uint256 hashPrevBlock = new Uint256();
+  Uint256 hashMerkleRoot = new Uint256();
   uint32_t nTime;
   uint32_t nBits;
   uint32_t nNonce;
@@ -385,8 +518,8 @@ public:
 
   void SetNull(){
     nVersion = 1;
-    hashPrevBlock = "";
-    hashMerkleRoot = "";
+    hashPrevBlock = 0;
+    hashMerkleRoot = 0;
     nTime = 0;
     nBits = 0;
     nNonce = 0;
@@ -403,8 +536,8 @@ public:
     byte[] header;
     
     header ~= nativeToLittleEndian(nVersion);
-    header ~= to!string(hashPrevBlock.chunks(2).array.retro.joiner).decodeHex;
-    header ~= to!string(hashMerkleRoot.chunks(2).array.retro.joiner).decodeHex;
+    header ~= to!string(hashPrevBlock.ToString().chunks(2).array.retro.joiner).decodeHex;
+    header ~= to!string(hashMerkleRoot.ToString().chunks(2).array.retro.joiner).decodeHex;
     header ~= nativeToLittleEndian(nTime);
     header ~= nativeToLittleEndian(nBits);
     header ~= nativeToLittleEndian(nNonce);
@@ -415,8 +548,8 @@ public:
 
   void Deserialize(string block){
     nVersion = littleEndianToNative!int(cast(ubyte[4])block.decodeHex()[0..4]);
-    hashPrevBlock = to!string(block[8..72].chunks(2).array.retro.joiner);
-    hashMerkleRoot = to!string(block[72..136].chunks(2).array.retro.joiner);
+    hashPrevBlock = new Uint256(to!string(block[8..72].chunks(2).array.retro.joiner));
+    hashMerkleRoot = new Uint256(to!string(block[72..136].chunks(2).array.retro.joiner));
     nTime = littleEndianToNative!int(cast(ubyte[4])block.decodeHex()[68..72]);
     nBits = littleEndianToNative!int(cast(ubyte[4])block.decodeHex()[72..76]);
     nNonce = littleEndianToNative!int(cast(ubyte[4])block.decodeHex()[76..80]);
@@ -429,8 +562,8 @@ public:
     byte[] header;
     
     header ~= nativeToLittleEndian(nVersion);
-    header ~= to!string(hashPrevBlock.chunks(2).array.retro.joiner).decodeHex;
-    header ~= to!string(hashMerkleRoot.chunks(2).array.retro.joiner).decodeHex;
+    header ~= to!string(hashPrevBlock.ToString().chunks(2).array.retro.joiner).decodeHex;
+    header ~= to!string(hashMerkleRoot.ToString().chunks(2).array.retro.joiner).decodeHex;
     header ~= nativeToLittleEndian(nTime);
     header ~= nativeToLittleEndian(nBits);
     header ~= nativeToLittleEndian(nNonce);
@@ -444,17 +577,17 @@ public:
     return toLower((cast(ubyte[]) header).toHexString);
   }
 
-  string GetHash(){
+  Uint256 GetHash(){
     auto sha256 = new SHA256Digest();
-    return toLower(to!string(toHexString(sha256.digest(sha256.digest(Serialize.decodeHex))).chunks(2).array.retro.joiner));
+    return new Uint256(toLower(to!string(toHexString(sha256.digest(sha256.digest(Serialize.decodeHex))).chunks(2).array.retro.joiner)));
   }
 
-  string BuildMerkleTree() const{
-    string[] txhashes;
+  Uint256 BuildMerkleTree() const{
+    Uint256[] txhashes;
 
     foreach(const CTransaction tx; vtx){
       // calculate transactions hashes and add them to an array 
-      txhashes ~= tx.GetHash();
+      txhashes ~= new Uint256(tx.GetHash());
     }
 
     if(txhashes.length == 1){
@@ -468,7 +601,7 @@ public:
       // calculate merkle root 
       }
 
-    return "";
+    return new Uint256(0);
   }
   bool CheckBlock() const{
     // These are checks that are independent of context
@@ -512,7 +645,7 @@ public:
 }
 
 bool ProcessBlock(CBlock pblock){
-  string hash = pblock.GetHash();
+  Uint256 hash = pblock.GetHash();
   // Check for duplicate
   // stable 
   // orphan 
