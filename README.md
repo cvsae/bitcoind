@@ -8,7 +8,7 @@
 
 ### Todos 
 - Each block can't have more than 1 tx, will be fixed
-- String is using instead of uint256, will be fixed
+- <del>String is using instead of uint256, will be fixed</del> Fixed
 - Coinbase transaction can't deserialized, will be fixed
 
 # Examples
