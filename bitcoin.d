@@ -249,6 +249,13 @@ public:
 
     return true;
   }
+  
+  bool opEquals(const CTransaction a, const CTransaction b) const{
+    return (a.nVersion  == b.nVersion &&
+            a.vin       == b.vin &&
+            a.vout      == b.vout &&
+            a.nLockTime == b.nLockTime);
+  }
 
 
   string Serialize() const{
