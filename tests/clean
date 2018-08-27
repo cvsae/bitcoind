@@ -1,0 +1,2 @@
+rm -rf mk_genesis
+rm -rf deser_genesis
