@@ -340,7 +340,7 @@ public:
     return str;
   }
 
-  void print(){
+  void print() const{
     writeln(ToString());
   }
 }
@@ -389,7 +389,7 @@ public:
     return (nBits == 0);
   }
 
-  string Serialize(){
+  string Serialize() const{
     // block header serialization
     byte[] header;
     
@@ -411,6 +411,8 @@ public:
     nTime = littleEndianToNative!int(cast(ubyte[4])block.decodeHex()[68..72]);
     nBits = littleEndianToNative!int(cast(ubyte[4])block.decodeHex()[72..76]);
     nNonce = littleEndianToNative!int(cast(ubyte[4])block.decodeHex()[76..80]);
+
+
   }
 
 
@@ -435,7 +437,7 @@ public:
     return toLower((cast(ubyte[]) header).toHexString);
   }
 
-  Uint256 GetHash(){
+  Uint256 GetHash() const{
     auto sha256 = new SHA256Digest();
     return new Uint256(toLower(to!string(toHexString(sha256.digest(sha256.digest(Serialize.decodeHex))).chunks(2).array.retro.joiner)));
   }
@@ -500,7 +502,18 @@ public:
 
     return true;
   }
+
+
+  void print() const{
+    writeln(format("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u)\n", GetHash().ToString(), nVersion,
+      hashPrevBlock.ToString(), hashMerkleRoot.ToString(), nTime, nBits, nNonce));
+     for (int i = 0; i < vtx.length; i++){
+      writeln("  ");
+      vtx[i].print();
+    }
+  }
 }
+
 
 bool ProcessBlock(CBlock pblock){
   Uint256 hash = pblock.GetHash();
