@@ -103,14 +103,23 @@ public:
   string ToString() const{
     return (GetHex());
   }
+unittest{
+    Uint256 a = new Uint256(0);
+    assert(a.ToString() == "0000000000000000000000000000000000000000000000000000000000000000");
+  }
 
-
-
+  
   void opUnary(string op : "++")(){
     int i = 0;
     while (++pn[i] == 0 && i < WIDTH-1)
       i++;
   }
+
+  unittest{
+    Uint256 a = new Uint256(8);
+    a++;
+  }
+
 
   void opUnary(string op : "--")(){
     int i = 0;
@@ -118,9 +127,21 @@ public:
       i++;
   }
 
+  unittest{
+    Uint256 a = new Uint256(8);
+    a--;
+  }
+
+
   alias opEquals = Object.opEquals;
   override bool opEquals(Object obj) const{
     return this.pn == (cast(Uint256)obj).pn;
+  }
+
+  unittest{
+    Uint256 a = new Uint256(7);
+    Uint256 b = new Uint256(7);
+    assert( a == b);
   }
 
 }
@@ -135,17 +156,27 @@ public:
 class Uint256: base_uint{
 public:
   alias base_uint basetype;
+  
+
 
   this(){
 
   }
 
+  unittest{
+    Uint256 a = new Uint256();
+  }
 
 
   this(const basetype b){
     for (int i = 0; i < WIDTH; i++){
       pn[i] = b.pn[i];
     }
+  }
+
+  unittest{
+    Uint256 a = new Uint256(9);
+    Uint256 b = new Uint256(a);
   }
 
 
@@ -156,7 +187,12 @@ public:
       pn[i] = 0;
     }
   }
+  
+  unittest{
+    Uint256 a = new Uint256(9);
+  }
 
+  
   void opAssign(uint64_t b) {
     pn[0] = cast(int)b;
     pn[1] = cast(int)(b >> 32);
@@ -165,14 +201,22 @@ public:
     }
   }
 
+  unittest{
+    Uint256 a = new Uint256();
+    a = 9;
+  }
+
 
   this(string str){
     SetHex(str);
   }
+
+  unittest{
+    Uint256 a = new Uint256("dt67");
+  }
 }
 
 // END UINT256
-
 
 
 class COutPoint{
