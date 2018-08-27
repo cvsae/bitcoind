@@ -15,7 +15,7 @@
 
 ``` bash
 git clone https://github.com/cvsae/bitcoind
-cd bitcoin/tests
+cd bitcoind/tests
 ./make_tests
 
 # runing mk_genesis 
@@ -44,5 +44,6 @@ cd bitcoin/tests
 [*] Nonce: 2083236893
 
 
-
+# delete executable tests files 
+./clean 
 ```
