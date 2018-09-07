@@ -1,0 +1,11 @@
+{
+	"name": "bitcoin",
+	"targetType": "library",
+	"authors": [
+		"cvsae"
+	],
+	"dependencies": {},
+	"description": "Bitcoin library ",
+	"copyright": "Copyright © 2018, cvsae",
+	"license": "MIT"
+}
