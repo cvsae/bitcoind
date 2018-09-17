@@ -256,10 +256,10 @@ public:
       }
     }
 
-    // number of transaction inputs
+    // number of transaction outputs
     header ~= CompactSize(to!int(vout.length));
 
-    // transactions inputs 
+    // transactions outputs 
     for( int i = 0; i < vout.length; ++i ) {
       foreach(const txout; vout){
         header ~= vout[i].Serialize().decodeHex();
