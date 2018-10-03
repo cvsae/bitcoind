@@ -65,7 +65,6 @@ public:
 
 
   string ToString() const{
-    writeln(hash == hash);
     return format("COutPoint(%s, %d)", hash.ToString(), n);
   }
 
@@ -128,7 +127,6 @@ public:
 
 
   string ToString() const{
-    writeln(prevout == prevout);
     string str;
     str ~= ("CTxIn(");
     str ~= prevout.ToString();
