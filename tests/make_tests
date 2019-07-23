@@ -1,3 +1,5 @@
 dmd mk_genesis.d ../src/bitcoin.d ../src/uint256.d ../src/utils.d
 dmd deser_genesis.d ../src/bitcoin.d ../src/uint256.d ../src/utils.d
+
+
 rm -rf *.o

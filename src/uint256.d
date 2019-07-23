@@ -16,9 +16,9 @@ import utils;
 
 // We have to keep a separate base class without constructors
 // so the compiler will let us use it in a union
-class base_uint{
+class base_uint(uint BITS){
 protected:
-  enum { WIDTH=256/32 };
+  enum { WIDTH=BITS/32 };
   int[WIDTH] pn;
 public:
 
@@ -108,15 +108,17 @@ public:
 }
 
 
+alias base_uint256 = base_uint!(256);
+
 
 //////////////////////////////////////////////////////////////////////////////
 //
 // uint256
 //
 
-class Uint256: base_uint{
+class Uint256: base_uint256{
 public:
-  alias base_uint basetype;
+  alias base_uint256 basetype;
   
 
 
