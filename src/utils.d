@@ -7,7 +7,7 @@ import core.stdc.stdint;
 import core.stdc.time;
 import std.algorithm;
 import std.conv: to;
-import std.digest;
+import std.digest.sha: toHexString;
 import std.range; 
 import std.stdio;
 
