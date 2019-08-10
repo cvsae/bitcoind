@@ -18,7 +18,15 @@ import uint256;
 import utils;
 
 
+static const uint MAX_SIZE = 0x02000000;
+static const int COINBASE_MATURITY = 100;
+
+extern int fGenerateBitcoins;
+
+
 const uint64_t COIN = 100000000;
+static const int64_t CENT = 1000000;
+
 
 
 
@@ -29,6 +37,57 @@ string CompactSize(int x){
 
   return "";
 }
+
+
+
+class CDiskTxPos
+{
+  public:
+    uint nFile;
+    uint nBlockPos;
+    uint nTxPos;
+
+    this()
+    {
+      SetNull();
+    }
+
+    this(uint nFileIn, uint nBlockPosIn, uint nTxPosIn)
+    {
+      nFile = nFileIn;
+      nBlockPos = nBlockPosIn;
+      nTxPos = nTxPosIn;
+    }
+
+    void SetNull() { nFile = -1; nBlockPos = 0; nTxPos = 0; }
+    bool IsNull() const { return (nFile == -1); }
+
+    string ToString() const
+    {
+      if (IsNull())
+        return format("null");
+        else
+          return format("(nFile=%d, nBlockPos=%d, nTxPos=%d)", nFile, nBlockPos, nTxPos);
+    }
+
+    void print() const
+    {
+      writeln(format("%s", ToString()));
+    }
+}
+
+
+class CInPoint
+{
+public:
+    CTransaction* ptx;
+    uint n;
+
+    this() { SetNull(); }
+    this(CTransaction* ptxIn, uint nIn) { ptx = ptxIn; n = nIn; }
+    void SetNull() { ptx = null; n = -1; }
+    bool IsNull() const { return (ptx == null && n == -1); }
+};
 
 
 
@@ -526,4 +585,13 @@ bool ProcessBlock(CBlock pblock){
   writeln("ProcessBlock: ACCEPTED\n");
 
   return true;
+}
+
+
+
+void main()
+{
+  CDiskTxPos pos = new CDiskTxPos(1,2,3);
+  pos.print();
+  
 }
