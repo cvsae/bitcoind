@@ -49,7 +49,7 @@ class CDiskTxPos
 
     this()
     {
-      SetNull();
+      Setnull();
     }
 
     this(uint nFileIn, uint nBlockPosIn, uint nTxPosIn)
@@ -59,12 +59,12 @@ class CDiskTxPos
       nTxPos = nTxPosIn;
     }
 
-    void SetNull() { nFile = -1; nBlockPos = 0; nTxPos = 0; }
-    bool IsNull() const { return (nFile == -1); }
+    void Setnull() { nFile = -1; nBlockPos = 0; nTxPos = 0; }
+    bool Isnull() const { return (nFile == -1); }
 
     string ToString() const
     {
-      if (IsNull())
+      if (Isnull())
         return format("null");
         else
           return format("(nFile=%d, nBlockPos=%d, nTxPos=%d)", nFile, nBlockPos, nTxPos);
@@ -83,10 +83,10 @@ public:
     CTransaction* ptx;
     uint n;
 
-    this() { SetNull(); }
+    this() { Setnull(); }
     this(CTransaction* ptxIn, uint nIn) { ptx = ptxIn; n = nIn; }
-    void SetNull() { ptx = null; n = -1; }
-    bool IsNull() const { return (ptx == null && n == -1); }
+    void Setnull() { ptx = null; n = -1; }
+    bool Isnull() const { return (ptx == null && n == -1); }
 };
 
 
@@ -97,7 +97,7 @@ public:
   int n;
 
   this(){
-    SetNull();
+    Setnull();
   }
 
   this(Uint256 hashIn, uint nIn) { 
@@ -105,11 +105,11 @@ public:
     n = nIn; 
   }
 
-  bool IsNull() const { 
+  bool Isnull() const { 
     return (hash == new Uint256(0)  && n == -1); 
   }
 
-  void SetNull(){ 
+  void Setnull(){ 
     hash = 0; 
     n = -1; 
   }
@@ -188,7 +188,7 @@ public:
     string str;
     str ~= ("CTxIn(");
     str ~= prevout.ToString();
-    if(prevout.IsNull())
+    if(prevout.Isnull())
       str ~= format(", coinbase %s", "");
     else{
       str ~= format(", scriptSig=%s", scriptSig.encodeHex);
@@ -219,7 +219,7 @@ public:
   string scriptPubKey;
 
   this(){
-    SetNull();
+    Setnull();
   }
 
   this(uint64_t nValueIn, string scriptPubKeyIn){
@@ -227,12 +227,12 @@ public:
     scriptPubKey = scriptPubKeyIn;
   }
 
-  void SetNull(){
+  void Setnull(){
     nValue = -1;
     scriptPubKey = "0";
   }
 
-  bool IsNull(){
+  bool Isnull(){
     return (nValue == -1);
   }
 
@@ -272,10 +272,10 @@ public:
   int nLockTime;
 
   this(){
-    SetNull();
+    Setnull();
   }
 
-  void SetNull(){
+  void Setnull(){
     nVersion = 1;
     vin  ~= new CTxIn;
     vout ~= new CTxOut;
@@ -346,7 +346,7 @@ public:
   }
 
   bool IsCoinBase() const{
-    return (vin.length == 1 && vin[0].prevout.IsNull());
+    return (vin.length == 1 && vin[0].prevout.Isnull());
   }
   
   int64_t GetValueOut() const{
@@ -378,7 +378,7 @@ public:
     }
     else{
       foreach(const CTxIn txin; vin)
-        if (txin.prevout.IsNull())
+        if (txin.prevout.Isnull())
           throw new Exception("CTransaction::CheckTransaction() : prevout is null");
     }
 
@@ -399,6 +399,40 @@ public:
   void print() const{
     writeln(ToString());
   }
+}
+
+//
+// A txdb record that contains the disk location of a transaction and the
+// locations of transactions that spend its outputs.  vSpent is really only
+// used as a flag, but having the location is very helpful for debugging.
+//
+class CTxIndex
+{
+public:
+    CDiskTxPos pos;
+    CDiskTxPos[] vSpent;
+
+    this()
+    {
+        Setnull();
+    }
+
+    this(CDiskTxPos posIn,  uint nOutputs)
+    {
+        pos = posIn;
+        vSpent.length = nOutputs;
+    }
+
+    void Setnull()
+    {
+        pos.Setnull();
+        //vSpent.clear();
+    }
+
+    bool Isnull()
+    {
+        return pos.Isnull();
+    }
 }
 
 
@@ -427,10 +461,10 @@ public:
 
 
   this(){
-    SetNull();
+    Setnull();
   }
 
-  void SetNull(){
+  void Setnull(){
     nVersion = 1;
     hashPrevBlock = 0;
     hashMerkleRoot = 0;
@@ -441,7 +475,7 @@ public:
     //vMerkleTree.clear();
     }
 
-  bool IsNull() const{
+  bool Isnull() const{
     return (nBits == 0);
   }
 
@@ -569,6 +603,83 @@ public:
     }
   }
 }
+
+//
+// The block chain is a tree shaped structure starting with the
+// genesis block at the root, with each block potentially having multiple
+// candidates to be the next block.  pprev and pnext link a path through the
+// main/longest chain.  A blockindex may have multiple pprev pointing back
+// to it, but pnext will only point forward to the longest branch, or will
+// be null if the block is not part of the longest chain.
+//
+class CBlockIndex
+{
+public:
+    Uint256 phashBlock;
+    CBlockIndex* pprev;
+    CBlockIndex* pnext;
+    uint nFile;
+    uint nBlockPos;
+    int nHeight;
+
+    // block header
+    int nVersion;
+    Uint256 hashMerkleRoot;
+    uint nTime;
+    uint nBits;
+    uint nNonce;
+
+
+    this()
+    {
+        phashBlock = null;
+        pprev = null;
+        pnext = null;
+        nFile = 0;
+        nBlockPos = 0;
+        nHeight = 0;
+
+        nVersion       = 0;
+        hashMerkleRoot = new Uint256(0);
+        nTime          = 0;
+        nBits          = 0;
+        nNonce         = 0;
+    }
+
+    this(uint nFileIn, uint nBlockPosIn, CBlock block)
+    {
+        phashBlock = null;
+        pprev = null;
+        pnext = null;
+        nFile = nFileIn;
+        nBlockPos = nBlockPosIn;
+        nHeight = 0;
+
+        nVersion       = block.nVersion;
+        hashMerkleRoot = block.hashMerkleRoot;
+        nTime          = block.nTime;
+        nBits          = block.nBits;
+        nNonce         = block.nNonce;
+    }
+
+
+    Uint256 GetBlockHash()
+    {
+        return phashBlock;
+    }
+
+    string ToString()
+    {
+
+        return format("CBlockIndex(nprev=%08x, pnext=%08x, nFile=%d, nBlockPos=%-6d nHeight=%d, merkle=%s)",pprev, pnext, nFile, nBlockPos, nHeight, hashMerkleRoot.ToString());
+    }
+
+    void print()
+    {
+      writeln(ToString());
+
+    }
+};
 
 
 bool ProcessBlock(CBlock pblock){
