@@ -586,12 +586,3 @@ bool ProcessBlock(CBlock pblock){
 
   return true;
 }
-
-
-
-void main()
-{
-  CDiskTxPos pos = new CDiskTxPos(1,2,3);
-  pos.print();
-  
-}
