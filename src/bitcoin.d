@@ -49,7 +49,7 @@ class CDiskTxPos
 
     this()
     {
-      Setnull();
+      SetNull();
     }
 
     this(uint nFileIn, uint nBlockPosIn, uint nTxPosIn)
@@ -59,12 +59,12 @@ class CDiskTxPos
       nTxPos = nTxPosIn;
     }
 
-    void Setnull() { nFile = -1; nBlockPos = 0; nTxPos = 0; }
-    bool Isnull() const { return (nFile == -1); }
+    void SetNull() { nFile = -1; nBlockPos = 0; nTxPos = 0; }
+    bool IsNull() const { return (nFile == -1); }
 
     string ToString() const
     {
-      if (Isnull())
+      if (IsNull())
         return format("null");
         else
           return format("(nFile=%d, nBlockPos=%d, nTxPos=%d)", nFile, nBlockPos, nTxPos);
@@ -83,10 +83,10 @@ public:
     CTransaction* ptx;
     uint n;
 
-    this() { Setnull(); }
+    this() { SetNull(); }
     this(CTransaction* ptxIn, uint nIn) { ptx = ptxIn; n = nIn; }
-    void Setnull() { ptx = null; n = -1; }
-    bool Isnull() const { return (ptx == null && n == -1); }
+    void SetNull() { ptx = null; n = -1; }
+    bool IsNull() const { return (ptx == null && n == -1); }
 };
 
 
@@ -97,7 +97,7 @@ public:
   int n;
 
   this(){
-    Setnull();
+    SetNull();
   }
 
   this(Uint256 hashIn, uint nIn) { 
@@ -105,11 +105,11 @@ public:
     n = nIn; 
   }
 
-  bool Isnull() const { 
+  bool IsNull() const { 
     return (hash == new Uint256(0)  && n == -1); 
   }
 
-  void Setnull(){ 
+  void SetNull(){ 
     hash = 0; 
     n = -1; 
   }
@@ -188,7 +188,7 @@ public:
     string str;
     str ~= ("CTxIn(");
     str ~= prevout.ToString();
-    if(prevout.Isnull())
+    if(prevout.IsNull())
       str ~= format(", coinbase %s", "");
     else{
       str ~= format(", scriptSig=%s", scriptSig.encodeHex);
@@ -219,7 +219,7 @@ public:
   string scriptPubKey;
 
   this(){
-    Setnull();
+    SetNull();
   }
 
   this(uint64_t nValueIn, string scriptPubKeyIn){
@@ -227,12 +227,12 @@ public:
     scriptPubKey = scriptPubKeyIn;
   }
 
-  void Setnull(){
+  void SetNull(){
     nValue = -1;
     scriptPubKey = "0";
   }
 
-  bool Isnull(){
+  bool IsNull(){
     return (nValue == -1);
   }
 
@@ -272,10 +272,10 @@ public:
   int nLockTime;
 
   this(){
-    Setnull();
+    SetNull();
   }
 
-  void Setnull(){
+  void SetNull(){
     nVersion = 1;
     vin  ~= new CTxIn;
     vout ~= new CTxOut;
@@ -346,7 +346,7 @@ public:
   }
 
   bool IsCoinBase() const{
-    return (vin.length == 1 && vin[0].prevout.Isnull());
+    return (vin.length == 1 && vin[0].prevout.IsNull());
   }
   
   int64_t GetValueOut() const{
@@ -378,7 +378,7 @@ public:
     }
     else{
       foreach(const CTxIn txin; vin)
-        if (txin.prevout.Isnull())
+        if (txin.prevout.IsNull())
           throw new Exception("CTransaction::CheckTransaction() : prevout is null");
     }
 
@@ -414,7 +414,7 @@ public:
 
     this()
     {
-        Setnull();
+        SetNull();
     }
 
     this(CDiskTxPos posIn,  uint nOutputs)
@@ -423,15 +423,15 @@ public:
         vSpent.length = nOutputs;
     }
 
-    void Setnull()
+    void SetNull()
     {
-        pos.Setnull();
+        pos.SetNull();
         //vSpent.clear();
     }
 
-    bool Isnull()
+    bool IsNull()
     {
-        return pos.Isnull();
+        return pos.IsNull();
     }
 }
 
@@ -461,10 +461,10 @@ public:
 
 
   this(){
-    Setnull();
+    SetNull();
   }
 
-  void Setnull(){
+  void SetNull(){
     nVersion = 1;
     hashPrevBlock = 0;
     hashMerkleRoot = 0;
@@ -475,7 +475,7 @@ public:
     //vMerkleTree.clear();
     }
 
-  bool Isnull() const{
+  bool IsNull() const{
     return (nBits == 0);
   }
 
