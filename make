@@ -1,0 +1,2 @@
+rm -rf *.o
+dmd bitcoin.d key.d uint256.d utils.d -L-lssl -L-lcrypto
