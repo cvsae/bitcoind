@@ -1,0 +1,2 @@
+rm -rf *.o
+dmd src/bitcoin.d src/key.d src/uint256.d src/utils.d -L-lssl -L-lcrypto
